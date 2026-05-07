@@ -5,9 +5,13 @@ from src.movie_system import MovieSystem, Movie, User
 class TestAddMovie:
     """测试添加电影功能"""
     
-    def test_add_valid_movie(self, movie_system):
+    def setup_method(self):
+        """每个测试前初始化系统"""
+        self.system = MovieSystem()
+    
+    def test_add_valid_movie(self):
         """测试添加有效电影"""
-        movie = movie_system.add_movie("Inception", "Christopher Nolan", 2010, "Sci-Fi")
+        movie = self.system.add_movie("Inception", "Christopher Nolan", 2010, "Sci-Fi")
         assert movie.movie_id == 1
         assert movie.name == "Inception"
         assert movie.director == "Christopher Nolan"
@@ -15,48 +19,52 @@ class TestAddMovie:
         assert movie.genre == "Sci-Fi"
         assert movie.rating == 0.0
     
-    def test_add_duplicate_movie_name(self, movie_system):
+    def test_add_duplicate_movie_name(self):
         """测试添加重复电影名应抛出异常"""
-        movie_system.add_movie("Inception", "Christopher Nolan", 2010, "Sci-Fi")
+        self.system.add_movie("Inception", "Christopher Nolan", 2010, "Sci-Fi")
         with pytest.raises(ValueError, match="already exists"):
-            movie_system.add_movie("inception", "Other Director", 2011, "Drama")
+            self.system.add_movie("inception", "Other Director", 2011, "Drama")
     
-    def test_add_movie_invalid_year(self, movie_system):
+    def test_add_movie_invalid_year(self):
         """测试添加无效年份应抛出异常"""
         with pytest.raises(ValueError, match="Release year"):
-            movie_system.add_movie("Test", "Director", 1700, "Drama")
+            self.system.add_movie("Test", "Director", 1700, "Drama")
     
-    def test_add_movie_empty_name(self, movie_system):
+    def test_add_movie_empty_name(self):
         """测试添加空名称应抛出异常"""
         with pytest.raises(ValueError, match="Movie name"):
-            movie_system.add_movie("", "Director", 2010, "Drama")
+            self.system.add_movie("", "Director", 2010, "Drama")
     
-    def test_add_movie_empty_genre(self, movie_system):
+    def test_add_movie_empty_genre(self):
         """测试添加空类型应抛出异常"""
         with pytest.raises(ValueError, match="Genre"):
-            movie_system.add_movie("Test", "Director", 2010, "")
+            self.system.add_movie("Test", "Director", 2010, "")
 
 
 class TestRegisterUser:
     """测试用户注册功能"""
     
-    def test_register_valid_user(self, movie_system):
+    def setup_method(self):
+        """每个测试前初始化系统"""
+        self.system = MovieSystem()
+    
+    def test_register_valid_user(self):
         """测试注册有效用户"""
-        user = movie_system.register_user("alice")
+        user = self.system.register_user("alice")
         assert user.user_id == 1
         assert user.username == "alice"
         assert user.rated_movies == {}
     
-    def test_register_duplicate_username(self, movie_system):
+    def test_register_duplicate_username(self):
         """测试注册重复用户名应抛出异常"""
-        movie_system.register_user("alice")
+        self.system.register_user("alice")
         with pytest.raises(ValueError, match="already exists"):
-            movie_system.register_user("Alice")
+            self.system.register_user("Alice")
     
-    def test_register_empty_username(self, movie_system):
+    def test_register_empty_username(self):
         """测试注册空用户名应抛出异常"""
         with pytest.raises(ValueError, match="Username"):
-            movie_system.register_user("")
+            self.system.register_user("")
 
 
 class TestRateMovie:
@@ -96,8 +104,14 @@ class TestRateMovie:
     
     def test_update_average_rating(self):
         """测试更新平均评分"""
+        # Alice 评分 8.0
         self.system.rate_movie(self.user.user_id, self.movie.movie_id, 8.0)
-        self.system.rate_movie(self.user.user_id, self.movie.movie_id, 10.0)
+        
+        # 注册 Bob 并评分 10.0
+        bob = self.system.register_user("bob")
+        self.system.rate_movie(bob.user_id, self.movie.movie_id, 10.0)
+        
+        # 平均分为 (8.0 + 10.0) / 2 = 9.0
         assert self.movie.rating == 9.0
 
 
