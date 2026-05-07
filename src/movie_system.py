@@ -143,9 +143,20 @@ class MovieSystem:
         user.rated_movies[movie_id] = rating
         
         # 重新计算电影的平均评分
-        total_rating = sum(user.rated_movies.values())
-        count = len(user.rated_movies)
-        movie.rating = round(total_rating / count, 2)
+        # 注意：这里计算的是所有已评分用户的平均分
+        total_rating = 0.0
+        count = 0
+        
+        # 遍历所有用户，累加他们对这部电影的评分
+        for u in self._users.values():
+            if movie_id in u.rated_movies:
+                total_rating += u.rated_movies[movie_id]
+                count += 1
+        
+        if count > 0:
+            movie.rating = round(total_rating / count, 2)
+        else:
+            movie.rating = 0.0
     
     def search_movies(self, query: str, by_name: bool = True) -> List[Movie]:
         """
